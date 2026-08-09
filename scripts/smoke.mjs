@@ -90,6 +90,7 @@ const ROUTES = [
   "/learn",
   "/arena",
   "/arena/design",
+  "/arena/battles",
   "/review",
   "/notebook",
   "/code",
