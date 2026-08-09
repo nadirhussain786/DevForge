@@ -50,26 +50,37 @@ on self-report alone, so week 1 is less targeted than it should be.
 
 ---
 
-## Phase 3 — The MVP loop 🚧 **partial**
+## Phase 3 — The MVP loop 🚧 **Learn/Explain closed; Test pending**
 
 Done: daily plan composer (revision-first, budget-capped), Command Center
 (`/today`), XP/level/streak/momentum engines, `user_events` emitter, evidence →
-`user_skills` recompute in SQL.
+`user_skills` recompute in SQL, **the AI grading layer** (`lib/ai/`), and the
+**Learn → Explain** surface — a topic reader with the four explanation levels
+plus the Explain gate that actually produces evidence.
 
-**Remaining:** the topic reader UI, the Explain submission flow, question drills,
-and the AI grading layer (`lib/ai/`). These are the surfaces that actually
-*produce* evidence — until they exist, the loop displays but does not turn.
+The AI layer uses Claude Opus 5 with schema-constrained structured output
+(`messages.parse` + `zodOutputFormat`), so a grade is a validated object, never
+prose we regex. It degrades to a capped keyword heuristic when the provider is
+unavailable — a graded answer is nice, losing someone's completed work is not.
+
+**Remaining:** question drills (the Test block) and the Build block.
 
 ---
 
-## Phase 4 — Failure → Skill 🚧 **engine done, wiring pending**
+## Phase 4 — Failure → Skill 🚧 **loop closed end to end; UI pending**
 
 Done: weakness triggers, severity model, remediation generation, SM-2
-scheduling, resolution rules (all unit-tested), plus the SQL trigger that opens
-weaknesses from real interview answers and auto-resolves on new evidence.
+scheduling, resolution rules (all unit-tested); the SQL trigger that opens
+weaknesses from real interview answers and auto-resolves on new evidence; and
+`features/practice/data/record.ts` — the single write path that turns every
+scored attempt into evidence, XP, and (when triggered) a weakness with its
+research task and spaced revision items already scheduled.
 
-**Remaining:** the server actions that call `evaluateTrigger` on each attempt,
-the weakness/revision UI, and the nightly readiness + momentum snapshot cron.
+A failed explanation now visibly opens a weakness and schedules its remediation
+without the user deciding anything.
+
+**Remaining:** the weakness/revision UI and the nightly readiness + momentum
+snapshot cron.
 
 ---
 

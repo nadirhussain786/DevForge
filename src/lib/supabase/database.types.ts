@@ -319,6 +319,28 @@ export interface Database {
         retired_at: string | null;
         created_at: string;
       }>;
+      research_tasks: Table<{
+        id: string;
+        user_id: string;
+        weakness_id: string | null;
+        skill_id: string;
+        prompt_md: string;
+        status: PlanItemStatus;
+        note_id: string | null;
+        completed_at: string | null;
+        created_at: string;
+      }>;
+      explanations: Table<{
+        id: string;
+        user_id: string;
+        topic_id: string | null;
+        skill_id: string;
+        body_md: string;
+        level_claimed: string;
+        score: number | null;
+        ai_eval: Json;
+        created_at: string;
+      }>;
       streaks: Table<{
         user_id: string;
         current_streak: number;
@@ -363,6 +385,16 @@ export interface Database {
         score: number;
         components: Json;
       }>;
+      ai_usage: Table<{
+        id: number;
+        user_id: string;
+        feature: string;
+        model: string;
+        input_tokens: number;
+        output_tokens: number;
+        cost_usd: number;
+        occurred_at: string;
+      }>;
       user_events: Table<{
         id: number;
         user_id: string;
@@ -373,7 +405,31 @@ export interface Database {
       }>;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      record_evidence: {
+        Args: {
+          p_skill: string;
+          p_source_type: string;
+          p_source_id: string | null;
+          p_difficulty: number;
+          p_correctness: number;
+        };
+        Returns: string;
+      };
+      consume_rate_limit: {
+        Args: {
+          p_key: string;
+          p_capacity: number;
+          p_refill_per_minute: number;
+          p_cost?: number;
+        };
+        Returns: boolean;
+      };
+      get_reference_architecture: {
+        Args: { p_case: string };
+        Returns: string;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
