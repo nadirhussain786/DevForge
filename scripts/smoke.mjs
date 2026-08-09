@@ -91,8 +91,10 @@ const ROUTES = [
   "/arena",
   "/review",
   "/notebook",
+  "/code",
   "/skills",
   "/career",
+  "/profile",
   "/onboarding",
 ];
 
