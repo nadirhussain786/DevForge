@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "engforge",
   "version": "0.1.0",
   "private": true,
@@ -16,6 +16,7 @@
     "db:verify": "node scripts/verify-rls.mjs",
     "db:admin": "node scripts/create-admin.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "verify:loop": "node scripts/verify-loop.mjs",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts"
   },
