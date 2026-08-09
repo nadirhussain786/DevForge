@@ -2,8 +2,21 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Per-model list prices, USD per million tokens. Update alongside AI_MODEL. */
+/**
+ * Per-model list prices, USD per million tokens.
+ *
+ * The Gemini flash models are on a free tier, so they cost nothing at the
+ * volumes a single learner generates — they are listed at zero deliberately,
+ * and the metering still records token counts so usage stays visible even
+ * when the bill is zero.
+ */
 const PRICES: Record<string, { input: number; output: number }> = {
+  "gemini-2.5-flash": { input: 0, output: 0 },
+  "gemini-2.5-flash-lite": { input: 0, output: 0 },
+  "gemini-3.5-flash": { input: 0, output: 0 },
+  "gemini-3.5-flash-lite": { input: 0, output: 0 },
+  "gemini-3.6-flash": { input: 0, output: 0 },
+  "gemini-2.5-pro": { input: 1.25, output: 10 },
   "claude-opus-5": { input: 5, output: 25 },
   "claude-sonnet-5": { input: 3, output: 15 },
   "claude-haiku-4-5": { input: 1, output: 5 },

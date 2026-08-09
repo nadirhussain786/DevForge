@@ -29,8 +29,40 @@ From **Project Settings → API**, fill in:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` / publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` key — **server only** |
 
-`ANTHROPIC_API_KEY` comes from [console.anthropic.com](https://console.anthropic.com).
 `CRON_SECRET` can be any long random string.
+
+### AI is optional, and free by default
+
+EngForge runs with no AI key at all. Multiple-choice grading, coding tests,
+self-assessed design work, and every mastery, readiness, and momentum
+calculation are unaffected. Written answers fall back to a keyword score
+**capped at 60%**, which deliberately cannot resolve a weakness or promote a
+skill on evidence that was never verified.
+
+To turn on full rubric grading, get a free key from
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey) and set:
+
+```
+GEMINI_API_KEY=...
+```
+
+The default model is `gemini-2.5-flash`, which is on the free tier —
+`gemini-3.5-flash` and `gemini-3.6-flash` are too, and either can be selected
+with `AI_MODEL`.
+
+Anthropic is still supported for anyone who prefers it: set
+`AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY`. It is paid, with no free tier.
+
+Confirm whichever you choose actually works:
+
+```bash
+pnpm ai:check
+```
+
+This sends one real rubric-grading request and validates the response against
+the same schema the app uses — so a pass means grading will work, not just that
+the key is syntactically valid. It also checks the model *followed* the rubric,
+and warns if a correct answer scored badly.
 
 > The service-role key bypasses RLS entirely. It must never be committed and
 > never given a `NEXT_PUBLIC_` prefix. `src/lib/supabase/admin.ts` imports

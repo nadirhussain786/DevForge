@@ -53,10 +53,15 @@ pnpm db:admin you@example.com      # create an admin, verified on creation
 pnpm dev
 ```
 
-`ANTHROPIC_API_KEY` is **optional**. Without it, multiple-choice grading,
-coding tests, self-assessed design work, and every mastery calculation behave
-identically; written answers fall back to a keyword score capped at 60% that
-deliberately cannot resolve a weakness.
+An AI key is **optional**. Without one, multiple-choice grading, coding tests,
+self-assessed design work, and every mastery calculation behave identically;
+written answers fall back to a keyword score capped at 60% that deliberately
+cannot resolve a weakness.
+
+To turn on rubric grading, set `GEMINI_API_KEY` from
+[aistudio.google.com/apikey](https://aistudio.google.com/apikey) — the default
+model is on Gemini's free tier. Anthropic is also supported via
+`AI_PROVIDER=anthropic`. Verify either with `pnpm ai:check`.
 
 Migrations in `supabase/migrations/` are the schema source of truth.
 

@@ -1,8 +1,6 @@
 import "server-only";
 
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-
-import { AI_MODEL, EFFORT, MAX_TOKENS, PROMPT_VERSIONS, getClient, isAiConfigured } from "./provider";
+import { PROMPT_VERSIONS, generateStructured, isAiConfigured } from "./provider";
 import { consumeRateLimit, fence } from "./guard";
 import { recordUsage } from "./meter";
 import { gradeSchema, type Grade } from "./schemas";
@@ -103,43 +101,22 @@ export async function gradeAnswer(req: GradeRequest): Promise<GradeResult> {
   }
 
   try {
-    const client = getClient();
-
-    const response = await client.messages.parse({
-      model: AI_MODEL,
-      max_tokens: MAX_TOKENS.grade,
-      output_config: {
-        effort: EFFORT.grade,
-        format: zodOutputFormat(gradeSchema),
-      },
-      system: [
-        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      ],
-      messages: [{ role: "user", content: buildUserPrompt(req) }],
+    const response = await generateStructured({
+      feature: "grade",
+      schema: gradeSchema,
+      system: SYSTEM_PROMPT,
+      user: buildUserPrompt(req),
     });
 
     await recordUsage({
       userId: req.userId,
       feature: "grade",
       model: response.model,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      inputTokens: response.inputTokens,
+      outputTokens: response.outputTokens,
     });
 
-    // A refusal returns HTTP 200 with no usable content — read stop_reason
-    // before touching the parsed output.
-    if (response.stop_reason === "refusal") {
-      console.warn("[ai/grade] refused", response.stop_details);
-      return { ...heuristicGrade(req), promptVersion, degraded: true };
-    }
-
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      console.warn("[ai/grade] no parsed output", response.stop_reason);
-      return { ...heuristicGrade(req), promptVersion, degraded: true };
-    }
-
-    return { ...parsed, promptVersion, degraded: false };
+    return { ...response.data, promptVersion, degraded: false };
   } catch (error) {
     // Never fail the learner's submission because the grader is down. Their
     // answer is already saved; a heuristic score keeps the day moving.

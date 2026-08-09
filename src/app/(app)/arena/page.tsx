@@ -26,9 +26,10 @@ export default async function ArenaPage() {
       {!isAiConfigured() && (
         <p className="mt-4 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface-2)] px-4 py-3 text-[13px] text-[var(--text-muted)]">
           <Badge variant="neutral">AI grading off</Badge>{" "}
-          No <code className="metric">ANTHROPIC_API_KEY</code> is configured. Multiple-choice
-          questions score exactly as normal; written answers get a conservative keyword score capped
-          at 60%, which deliberately can&apos;t resolve a weakness on its own.
+          No <code className="metric">GEMINI_API_KEY</code> is configured. Multiple-choice questions
+          score exactly as normal; written answers get a conservative keyword score capped at 60%,
+          which deliberately can&apos;t resolve a weakness on its own. A free key from{" "}
+          <span className="metric">aistudio.google.com/apikey</span> turns on full rubric grading.
         </p>
       )}
 

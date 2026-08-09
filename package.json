@@ -18,10 +18,12 @@
     "smoke": "node scripts/smoke.mjs",
     "verify:loop": "node scripts/verify-loop.mjs",
     "db:push": "supabase db push",
-    "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
+    "ai:check": "node scripts/ai-check.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
+    "@google/genai": "^2.16.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
     "class-variance-authority": "^0.7.1",
