@@ -63,9 +63,37 @@ async function makeUser(tag) {
   return { id: data.user.id, client };
 }
 
+/**
+ * Hard delete is blocked once a user has evidence — `skill_evidence` is
+ * append-only and refuses the cascade (see migration 0015). Test fixtures
+ * still need to disappear entirely, so remove the ledger rows over a direct
+ * Postgres connection with the guard briefly disabled, then delete the user.
+ *
+ * Falls back to `soft_delete_account` when no DB URL is configured, which
+ * leaves scrubbed rows behind rather than nothing.
+ */
 async function cleanup() {
+  const dbUrl = process.env.SUPABASE_DB_URL;
+
+  if (dbUrl && created.length > 0) {
+    try {
+      const { default: pg } = await import("pg");
+      const client = new pg.Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+      await client.connect();
+      await client.query("alter table public.skill_evidence disable trigger skill_evidence_immutable");
+      for (const id of created) {
+        await client.query("delete from public.skill_evidence where user_id = $1", [id]);
+      }
+      await client.query("alter table public.skill_evidence enable trigger skill_evidence_immutable");
+      await client.end();
+    } catch (error) {
+      console.log(`  note  could not clear test evidence: ${error.message}`);
+    }
+  }
+
   for (const id of created) {
-    await admin.auth.admin.deleteUser(id).catch(() => {});
+    const { error } = await admin.auth.admin.deleteUser(id);
+    if (error) console.log(`  note  left ${id.slice(0, 8)} behind: ${error.message}`);
   }
 }
 

@@ -130,12 +130,42 @@ Sign up at `/sign-up` → onboarding → your roadmap generates → `/today`.
 
 ## Making yourself an admin
 
-Roles are not self-assignable — the RLS policy on `profiles` blocks a user from
-changing their own `role`. Promote yourself once from the SQL Editor:
+Roles are deliberately **not** self-assignable — the RLS policy on `profiles`
+blocks a user from changing their own `role`, so the first admin has to be
+created out-of-band with the service-role key:
+
+```bash
+pnpm db:admin you@example.com                      # generates a strong password
+pnpm db:admin you@example.com 'your-password'      # or set one
+pnpm db:admin them@example.com --role admin        # non-owner admin
+```
+
+Creates the account if it doesn't exist, promotes it if it does, then verifies
+it by signing in and confirming that being an admin **still** reads zero rows
+from `research_notes`. The generated password is printed once and stored
+nowhere.
+
+## Deleting an account
+
+Accounts are **soft-deleted**, not removed. Hard delete is blocked on purpose:
+`skill_evidence` is append-only, and cascading a hard delete through it would
+mean rewriting an immutable ledger.
 
 ```sql
-update public.profiles set role = 'super_admin' where id = '<your-auth-uid>';
+select public.soft_delete_account('<user-uuid>');
 ```
+
+Callable by the account itself or a super admin. It:
+
+- **erases personal data** — research notes, note links, interview transcripts,
+  pasted job descriptions, interview and application notes, notifications
+- **scrubs identity** — display name, handle, avatar, and the auth email
+- **blocks sign-in** — the auth user is banned rather than deleted
+- **keeps the pseudonymous trail** — evidence, attempts, and events, which carry
+  no personal data and are what the curriculum analytics in §34 are built from
+
+That satisfies erasure without corrupting aggregate learning data. A hard
+`DELETE` still raises, with an error message pointing at this function.
 
 ## Everyday commands
 
