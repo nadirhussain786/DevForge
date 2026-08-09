@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { buildDrill } from "@/features/practice/data/select";
@@ -30,6 +31,15 @@ export default async function ArenaPage() {
           at 60%, which deliberately can&apos;t resolve a weakness on its own.
         </p>
       )}
+
+      <nav className="mt-5 flex flex-wrap gap-2">
+        <Link
+          href="/arena/design"
+          className="rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-1.5 text-[13px] hover:bg-[var(--surface-2)]"
+        >
+          System Design Arena →
+        </Link>
+      </nav>
 
       <div className="mt-6">
         {questions.length === 0 ? (

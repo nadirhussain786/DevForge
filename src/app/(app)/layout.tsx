@@ -1,3 +1,4 @@
+import { CommandPalette } from "@/components/shell/command-palette";
 import { NavRail } from "@/components/shell/nav-rail";
 import { TopBar } from "@/components/shell/top-bar";
 import { requireSessionContext } from "@/lib/auth/session";
@@ -30,6 +31,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         {/* pb-20 clears the mobile tab bar. */}
         <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
       </div>
+
+      <CommandPalette />
     </div>
   );
 }

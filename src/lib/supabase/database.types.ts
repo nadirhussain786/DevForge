@@ -405,6 +405,35 @@ export interface Database {
         ai_review: Json;
         created_at: string;
       }>;
+      system_design_cases: Table<{
+        id: string;
+        slug: string;
+        title: string;
+        brief_md: string;
+        constraints: Json;
+        traffic_profile: Json;
+        rubric: Json;
+        /** Never selected by user-facing queries — read via get_reference_architecture(). */
+        reference_architecture_md: string | null;
+        difficulty: number;
+        estimated_minutes: number;
+        status: ContentStatus;
+        created_at: string;
+        updated_at: string;
+      }>;
+      boss_battles: Table<{
+        id: string;
+        slug: string;
+        title: string;
+        scenario_md: string;
+        week_hint: number | null;
+        rubric: Json;
+        xp: number;
+        difficulty: number;
+        skill_id: string | null;
+        status: ContentStatus;
+        created_at: string;
+      }>;
       system_design_attempts: Table<{
         id: string;
         user_id: string;

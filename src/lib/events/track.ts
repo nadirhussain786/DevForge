@@ -19,6 +19,7 @@ export const EVENT_NAMES = [
   "explanation_submitted",
   "question_answered",
   "coding_problem_solved",
+  "system_design_completed",
   "research_started",
   "research_completed",
   "revision_reviewed",
