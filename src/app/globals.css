@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   EngForge design tokens — see docs/06-design-system.md
+   Dark is the default surface; light is fully supported.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Neutrals — slate-cooled, never pure grey */
+  --bg: oklch(99% 0.002 250);
+  --surface: oklch(100% 0 0);
+  --surface-2: oklch(97% 0.003 250);
+  --surface-3: oklch(94% 0.004 250);
+  --border: oklch(90% 0.006 250);
+  --border-strong: oklch(84% 0.008 250);
+  --text: oklch(21% 0.012 250);
+  --text-muted: oklch(48% 0.011 250);
+  --text-subtle: oklch(62% 0.009 250);
+
+  /* Forge accent — heat. At most one primary accent element per viewport. */
+  --forge-500: oklch(63% 0.19 42);
+  --forge-400: oklch(69% 0.17 46);
+  --forge-600: oklch(55% 0.19 38);
+  --forge-glow: oklch(63% 0.19 42 / 0.12);
+  --on-forge: oklch(99% 0.01 60);
+
+  /* Semantic */
+  --success: oklch(60% 0.14 155);
+  --warn: oklch(72% 0.15 78);
+  --danger: oklch(58% 0.20 25);
+  --info: oklch(60% 0.13 245);
+
+  /* Heat scale — MASTERY ONLY. Never status, severity, or decoration. */
+  --heat-0: oklch(72% 0.02 250);
+  --heat-1: oklch(66% 0.09 265);
+  --heat-2: oklch(66% 0.11 200);
+  --heat-3: oklch(70% 0.13 130);
+  --heat-4: oklch(74% 0.15 75);
+  --heat-5: oklch(66% 0.19 42);
+
+  --ring: var(--forge-500);
+  --radius: 0.625rem;
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --bg: oklch(15% 0.008 250);
+    --surface: oklch(18.5% 0.009 250);
+    --surface-2: oklch(22% 0.010 250);
+    --surface-3: oklch(26% 0.011 250);
+    --border: oklch(29% 0.012 250);
+    --border-strong: oklch(38% 0.014 250);
+    --text: oklch(96% 0.004 250);
+    --text-muted: oklch(72% 0.010 250);
+    --text-subtle: oklch(58% 0.011 250);
+
+    --forge-500: oklch(70% 0.18 45);
+    --forge-400: oklch(76% 0.15 50);
+    --forge-600: oklch(62% 0.19 40);
+    --forge-glow: oklch(70% 0.18 45 / 0.16);
+    --on-forge: oklch(16% 0.02 45);
+
+    --success: oklch(70% 0.15 155);
+    --warn: oklch(80% 0.15 82);
+    --danger: oklch(68% 0.19 25);
+    --info: oklch(70% 0.13 245);
+
+    --heat-0: oklch(44% 0.015 250);
+    --heat-1: oklch(60% 0.10 265);
+    --heat-2: oklch(66% 0.12 200);
+    --heat-3: oklch(72% 0.14 130);
+    --heat-4: oklch(78% 0.15 75);
+    --heat-5: oklch(72% 0.19 45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: oklch(15% 0.008 250);
+  --surface: oklch(18.5% 0.009 250);
+  --surface-2: oklch(22% 0.010 250);
+  --surface-3: oklch(26% 0.011 250);
+  --border: oklch(29% 0.012 250);
+  --border-strong: oklch(38% 0.014 250);
+  --text: oklch(96% 0.004 250);
+  --text-muted: oklch(72% 0.010 250);
+  --text-subtle: oklch(58% 0.011 250);
+
+  --forge-500: oklch(70% 0.18 45);
+  --forge-400: oklch(76% 0.15 50);
+  --forge-600: oklch(62% 0.19 40);
+  --forge-glow: oklch(70% 0.18 45 / 0.16);
+  --on-forge: oklch(16% 0.02 45);
+
+  --success: oklch(70% 0.15 155);
+  --warn: oklch(80% 0.15 82);
+  --danger: oklch(68% 0.19 25);
+  --info: oklch(70% 0.13 245);
+
+  --heat-0: oklch(44% 0.015 250);
+  --heat-1: oklch(60% 0.10 265);
+  --heat-2: oklch(66% 0.12 200);
+  --heat-3: oklch(72% 0.14 130);
+  --heat-4: oklch(78% 0.15 75);
+  --heat-5: oklch(72% 0.19 45);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-forge: var(--forge-500);
+  --color-forge-400: var(--forge-400);
+  --color-forge-600: var(--forge-600);
+  --color-forge-glow: var(--forge-glow);
+  --color-on-forge: var(--on-forge);
+
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
+  --color-heat-5: var(--heat-5);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-card: var(--radius);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Metrics are always mono + tabular so columns of numbers line up. */
+  .metric {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--forge-glow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
