@@ -21,6 +21,7 @@ Read in order — the design package precedes the code (§68 of the brief).
 | [05 — Admin Flows](docs/05-admin-flows.md) | Console, analytics, learning insights, CMS, privacy boundaries |
 | [06 — Design System](docs/06-design-system.md) | Tokens, layout, components, motion, accessibility |
 | [07 — Implementation Roadmap](docs/07-implementation-roadmap.md) | Phases 0–12, exit criteria, content-authoring timeline |
+| [07 — Phase Status](docs/07-phases.md) | **Live build status** — what shipped, what hasn't, and why |
 | [08 — Setup](docs/08-setup.md) | Supabase provisioning, migrations, seeds, RLS verification |
 
 ## Three things that define the architecture
@@ -46,21 +47,39 @@ Full walkthrough in [docs/08-setup.md](docs/08-setup.md). The short version:
 
 ```bash
 pnpm install
-cp .env.example .env.local          # Supabase + Anthropic keys
-pnpm supabase login && pnpm supabase link --project-ref <ref>
-pnpm db:push                         # migrations 0001–0014
-# then run supabase/seed/*.sql in order
-pnpm db:types                        # replaces the hand-authored stopgap
+cp .env.example .env               # Supabase keys + SUPABASE_DB_URL
+pnpm db:seed                       # migrations, then seeds — both idempotent
+pnpm db:admin you@example.com      # create an admin, verified on creation
 pnpm dev
 ```
 
-Database migrations live in `supabase/migrations/` and are the schema source of
-truth. TypeScript types are generated *from* the database, never the reverse.
+`ANTHROPIC_API_KEY` is **optional**. Without it, multiple-choice grading,
+coding tests, self-assessed design work, and every mastery calculation behave
+identically; written answers fall back to a keyword score capped at 60% that
+deliberately cannot resolve a weakness.
+
+Migrations in `supabase/migrations/` are the schema source of truth.
 
 ```bash
-pnpm db:push       # apply migrations to the linked Supabase project
-pnpm db:types      # regenerate src/lib/supabase/database.types.ts
+pnpm db:migrate           # apply migrations over SUPABASE_DB_URL
+pnpm db:migrate --dry-run # list what would run
+pnpm db:probe             # what's applied, and how much is seeded
 ```
+
+### Verification
+
+Four independent levels, because each proves something the others don't:
+
+```bash
+pnpm test         # pure engines — formulas, invariants, edge cases (170)
+pnpm db:verify    # RLS: an admin JWT reads zero owner_only rows, live
+pnpm verify:loop  # the write path: answer → evidence → weakness → resolution
+pnpm smoke        # every page renders with a real session (run pnpm dev first)
+```
+
+`db:verify` and `verify:loop` create and remove their own throwaway accounts,
+and both are safe to re-run. Type-checking proves a page compiles; these prove
+it works.
 
 ## Project layout
 
