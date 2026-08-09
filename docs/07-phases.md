@@ -33,6 +33,25 @@ pnpm smoke        # every page renders with a real session (needs pnpm dev)
 | **10 · Admin console** | Overview, user list, learning insights — built only on aggregate and `owner_plus_admin` tables |
 | **11 · Gamification** | XP, levels, streaks with shields, momentum, achievements with progress rings, command palette (⌘K), global search |
 | **12 · Hardening (partial)** | Security headers, Postgres rate limiting, RLS test suite, soft-delete erasure |
+| **13 · Learning experience** | Warm/dense dual density, serif reading surfaces, glossary tooltips, prerequisite guidance, guided first attempt, progress storytelling, mermaid diagrams with mandatory explanations |
+
+---
+
+## Phase 13 — the beginner path
+
+Four aids, each of which withdraws once it is no longer needed:
+
+| Aid | Where | Restraint that keeps it from becoming noise |
+|---|---|---|
+| Glossary tooltips | Any topic prose | Only the **first** occurrence of a term per page is marked, with a dotted underline rather than colour |
+| Prerequisite guidance | Topic header, `/learn` cards | Advice, never a gate — someone who already knows the material is not made to prove it |
+| Guided first attempt | The Explain gate | Hidden once the draft passes 240 characters, and never shown after the first explanation |
+| Progress storytelling | `/today` | Every beat cites a verifiable number; when the picture is bad the beat says so |
+
+`masteryBefore` in the story is **recomputed from the append-only evidence log**
+as of the cutoff rather than stored. There is no mastery-history table to drift
+out of agreement with the evidence, and decay is applied from where the learner
+stood then rather than from now.
 
 ---
 
@@ -40,8 +59,8 @@ pnpm smoke        # every page renders with a real session (needs pnpm dev)
 
 | Phase | Missing | Blocked by |
 |---|---|---|
-| 7 · AI Interviewer | Adaptive mock interview with follow-ups and a session report | Needs `ANTHROPIC_API_KEY` |
-| 8 · JD intelligence | LLM parsing of a pasted job description → gap report. **The gap engine itself is built and tested** — only parsing is missing | Needs `ANTHROPIC_API_KEY` |
+| 7 · AI Interviewer | Adaptive mock interview with follow-ups and a session report | Needs `GEMINI_API_KEY` |
+| 8 · JD intelligence | LLM parsing of a pasted job description → gap report. **The gap engine itself is built and tested** — only parsing is missing | Needs `GEMINI_API_KEY` |
 | 9 · Incident Simulator | Progressive-reveal investigation. Schema and RLS exist (`incident_scenarios`, `incident_reveals` with an earned-reveal policy) | Content authoring |
 | 9 · Projects | Multi-milestone project work. Schema exists | Content authoring |
 | 10 · Content CMS | Admin authoring UI. Content is currently authored as seed SQL, which works but doesn't scale past one author | — |
@@ -54,7 +73,7 @@ pnpm smoke        # every page renders with a real session (needs pnpm dev)
 
 The platform is further along than the curriculum. Right now there are **2
 authored topics, 4 questions, 1 coding problem, 2 design cases, 2 boss
-battles** against 101 skills.
+battles, 35 glossary terms and 4 explained diagrams** against 101 skills.
 
 Every surface degrades honestly when content is thin — the roadmap generator
 only schedules skills that have published content, the drill says so when it
@@ -62,9 +81,33 @@ runs out, and the 21-day cooldown prevents farming the same four questions.
 But an 8-week roadmap needs roughly 80 topics and 320 questions, and that is
 now the critical path rather than the code.
 
+### The generator
+
+```
+pnpm content:generate --limit 3    # draft a few and read them first
+pnpm content:generate              # every skill without a topic
+pnpm content:publish               # publish what survived review
+```
+
+Each run drafts a topic at all four levels plus mistakes, trade-offs, a mermaid
+diagram with its explanation, and three rubric-backed questions. Output lands
+in `supabase/generated/*.md` as readable prose **and** in the database as
+`draft`.
+
+Two things make this safe to run unattended. Nothing is published — a draft is
+invisible to a learner until `content:publish` promotes it. And the publish
+trigger rejects any topic missing an explanation level, so an incomplete
+generation cannot reach anyone even if the review step is skipped.
+
+Drafts are quantity, not quality. The question rubrics are the part that must
+be read before publishing: explanation grading uses fixed criteria, so shallow
+topic prose cannot corrupt mastery there, but a bad rubric can.
+
+Needs `GEMINI_API_KEY` (free tier at aistudio.google.com/apikey).
+
 ## AI is optional, and currently off
 
-No `ANTHROPIC_API_KEY` is configured, which is a supported deployment. MCQ
+No `GEMINI_API_KEY` is configured, which is a supported deployment. MCQ
 grading, coding tests, self-assessed design and boss battles, and every
 mastery calculation work identically without it. Written answers fall back to
 a keyword score **capped at 60%**, which deliberately cannot resolve a weakness

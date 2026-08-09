@@ -47,7 +47,36 @@ if (ephemeral) {
     process.exit(1);
   }
   createdId = data.user.id;
+
+  // Without this the account is stuck at /onboarding and every app route
+  // answers 307 — which the checks below would happily call a pass. Onboarding
+  // the user is what makes the smoke test actually render anything.
+  const { data: track } = await admin.from("role_tracks").select("id").limit(1).maybeSingle();
+
+  const { error: onboardError } = await admin.from("career_profiles").upsert(
+    {
+      user_id: createdId,
+      role_track_id: track?.id ?? null,
+      experience_level: "mid",
+      target_markets: ["UK"],
+      daily_minutes: 60,
+      weeks: 8,
+      phase: "phase1",
+      onboarding_step: 99,
+      onboarding_completed_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (onboardError) {
+    console.error(`Could not onboard the smoke user: ${onboardError.message}`);
+    await admin.auth.admin.deleteUser(createdId);
+    process.exit(1);
+  }
 }
+
+/** An onboarded account must render the app; only a supplied account may not be. */
+const expectRendered = ephemeral;
 
 const client = createClient(url, anonKey, { auth: { persistSession: false } });
 const { data: signIn, error: signInError } = await client.auth.signInWithPassword({
@@ -127,12 +156,21 @@ async function check(route, { expectAuthed = true } = {}) {
   if (expectAuthed && (status === 307 || status === 302)) {
     const to = response.headers.get("location") ?? "?";
 
-    // Two redirects are correct rather than broken, and which one you get
-    // depends on where the account is: an un-onboarded user is sent to
-    // /onboarding from everywhere, and an onboarded one is sent away from
-    // /onboarding to /today.
-    if (to.includes("/onboarding") || (route === "/onboarding" && to.includes("/today"))) {
+    // An onboarded account being sent to /onboarding is a real failure. Left
+    // as "expected" it would let every app route pass without rendering a
+    // single line of the page it was supposed to be testing.
+    if (route === "/onboarding" && to.includes("/today")) {
       console.log(`  ok    ${route.padEnd(18)} ${status} -> ${to} (expected)`);
+      return;
+    }
+
+    if (to.includes("/onboarding")) {
+      if (expectRendered) {
+        console.log(`  FAIL  ${route.padEnd(18)} ${status} -> ${to} (account is onboarded)`);
+        failures++;
+      } else {
+        console.log(`  ok    ${route.padEnd(18)} ${status} -> ${to} (not onboarded)`);
+      }
       return;
     }
     console.log(`  FAIL  ${route.padEnd(18)} ${status} -> ${to} (session not recognised)`);
