@@ -319,6 +319,38 @@ export interface Database {
         retired_at: string | null;
         created_at: string;
       }>;
+      research_notes: Table<{
+        id: string;
+        user_id: string;
+        kind: "notebook" | "experiment";
+        title: string;
+        topic_id: string | null;
+        skill_id: string | null;
+        question_md: string | null;
+        hypothesis_md: string | null;
+        research_md: string | null;
+        experiment_md: string | null;
+        code_md: string | null;
+        result_md: string | null;
+        evidence_md: string | null;
+        conclusion_md: string | null;
+        interview_explanation_md: string | null;
+        open_questions_md: string | null;
+        confidence: number | null;
+        tags: string[];
+        status: PlanItemStatus;
+        completed_at: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      note_links: Table<{
+        id: string;
+        note_id: string;
+        user_id: string;
+        item_ref_type: string;
+        item_ref_id: string;
+        created_at: string;
+      }>;
       jd_requirements: Table<{
         id: string;
         jd_id: string;

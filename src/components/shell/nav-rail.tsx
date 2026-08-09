@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Beaker,
   Briefcase,
   Code2,
   Flame,
   Gauge,
   Map as MapIcon,
   NotebookPen,
+  RotateCcw,
   Swords,
   Target,
 } from "lucide-react";
@@ -22,7 +22,7 @@ const NAV = [
   { href: "/learn", label: "Learn", icon: Flame },
   { href: "/code", label: "Code", icon: Code2 },
   { href: "/arena", label: "Arena", icon: Swords },
-  { href: "/lab", label: "Lab", icon: Beaker },
+  { href: "/review", label: "Review", icon: RotateCcw },
   { href: "/notebook", label: "Notebook", icon: NotebookPen },
   { href: "/skills", label: "Skills", icon: Gauge },
   { href: "/career", label: "Career", icon: Briefcase },

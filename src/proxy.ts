@@ -14,7 +14,20 @@ import { createServerClient } from "@supabase/ssr";
  * by RLS, so a forged cookie gains nothing.
  */
 
-const PROTECTED = ["/today", "/roadmap", "/learn", "/code", "/notebook", "/lab", "/arena", "/skills", "/career", "/profile", "/onboarding"];
+const PROTECTED = [
+  "/today",
+  "/roadmap",
+  "/learn",
+  "/code",
+  "/notebook",
+  "/lab",
+  "/arena",
+  "/review",
+  "/skills",
+  "/career",
+  "/profile",
+  "/onboarding",
+];
 const AUTH_ROUTES = ["/sign-in", "/sign-up"];
 
 export async function proxy(request: NextRequest) {
