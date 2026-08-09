@@ -111,7 +111,8 @@ try {
     { user_id: uid, weakness_id: weakness.id, skill_id: skill.id, item_ref_type: "topic", due_at: new Date().toISOString(), interval_days: 1 },
     { user_id: uid, weakness_id: weakness.id, skill_id: skill.id, item_ref_type: "question_set", due_at: new Date().toISOString(), interval_days: 3 },
   ]);
-  rErr ? bad(`revision scheduling failed: ${rErr.message}`) : ok("spaced revision scheduled");
+  if (rErr) bad(`revision scheduling failed: ${rErr.message}`);
+  else ok("spaced revision scheduled");
 
   const { error: tErr } = await user.from("research_tasks").insert({
     user_id: uid,
@@ -119,7 +120,8 @@ try {
     skill_id: skill.id,
     prompt_md: `Investigate ${skill.name} until you can explain it without notes.`,
   });
-  tErr ? bad(`research task failed: ${tErr.message}`) : ok("research task created");
+  if (tErr) bad(`research task failed: ${tErr.message}`);
+  else ok("research task created");
 
   // A second live weakness on the same skill must be impossible.
   const { error: dupErr } = await user.from("weaknesses").insert({
@@ -129,9 +131,8 @@ try {
     source_type: "mcq",
     source_id: null,
   });
-  dupErr
-    ? ok("a duplicate open weakness on the same skill is rejected")
-    : bad("DUPLICATE — two live weaknesses opened for one skill");
+  if (dupErr) ok("a duplicate open weakness on the same skill is rejected");
+  else bad("DUPLICATE — two live weaknesses opened for one skill");
 
   // ── 3. Review advances the schedule but does NOT resolve ────────────────
   console.log("\n3. Review advances, it does not resolve");
@@ -150,9 +151,8 @@ try {
     .eq("id", weakness.id)
     .maybeSingle();
 
-  stillOpen?.status !== "resolved"
-    ? ok(`recall alone left it unresolved (status ${stillOpen?.status})`)
-    : bad("INVARIANT #5 — recall alone resolved the weakness");
+  if (stillOpen?.status !== "resolved") ok(`recall alone left it unresolved (status ${stillOpen?.status})`);
+  else bad("INVARIANT #5 — recall alone resolved the weakness");
 
   // ── 4. Weak evidence must not resolve it either ─────────────────────────
   await user.rpc("record_evidence", {
@@ -169,9 +169,8 @@ try {
     .eq("id", weakness.id)
     .maybeSingle();
 
-  afterEasy?.status !== "resolved"
-    ? ok("a correct answer on EASIER material did not resolve it")
-    : bad("VIOLATION — easier material resolved the weakness");
+  if (afterEasy?.status !== "resolved") ok("a correct answer on EASIER material did not resolve it");
+  else bad("VIOLATION — easier material resolved the weakness");
 
   // ── 5. Strong evidence at difficulty resolves it ────────────────────────
   console.log("\n4. Real evidence closes the loop");
@@ -190,9 +189,8 @@ try {
     .eq("id", weakness.id)
     .maybeSingle();
 
-  resolved?.status === "resolved"
-    ? ok("strong evidence at equal difficulty resolved it automatically")
-    : bad(`weakness still ${resolved?.status} after strong evidence at difficulty 4`);
+  if (resolved?.status === "resolved") ok("strong evidence at equal difficulty resolved it automatically");
+  else bad(`weakness still ${resolved?.status} after strong evidence at difficulty 4`);
 
   if (resolved?.resolved_by_evidence_id && resolved.resolved_by_evidence_id !== firstEvidence) {
     ok("resolved by a DIFFERENT attempt than the one that opened it");
@@ -215,12 +213,12 @@ try {
   const sourceId = crypto.randomUUID();
   await user.from("xp_transactions").insert({ user_id: uid, amount: 200, source_type: "weekly_mission_completed", source_id: sourceId });
   const { error: dupXp } = await user.from("xp_transactions").insert({ user_id: uid, amount: 200, source_type: "weekly_mission_completed", source_id: sourceId });
-  dupXp ? ok("duplicate XP rejected") : bad("XP awarded twice");
+  if (dupXp) ok("duplicate XP rejected");
+  else bad("XP awarded twice");
 
   const { data: progress } = await user.from("user_progress").select("total_xp, level, level_name").maybeSingle();
-  progress?.total_xp === 200 && progress.level_name === "Apprentice"
-    ? ok(`user_progress synced by trigger (${progress.total_xp} XP, ${progress.level_name})`)
-    : bad(`user_progress wrong: ${JSON.stringify(progress)}`);
+  if (progress?.total_xp === 200 && progress.level_name === "Apprentice") ok(`user_progress synced by trigger (${progress.total_xp} XP, ${progress.level_name})`);
+  else bad(`user_progress wrong: ${JSON.stringify(progress)}`);
 
   // ── 7. Daily plan budget invariant, enforced by the database ────────────
   console.log("\n6. Daily plan budget");
@@ -247,9 +245,8 @@ try {
     planned_minutes: 30,
   });
 
-  /budget/i.test(overBudget?.message ?? "")
-    ? ok("INVARIANT #1 — the database refused to overschedule the day")
-    : bad(`over-budget insert was allowed: ${overBudget?.message ?? "no error"}`);
+  if (/budget/i.test(overBudget?.message ?? "")) ok("INVARIANT #1 — the database refused to overschedule the day");
+  else bad(`over-budget insert was allowed: ${overBudget?.message ?? "no error"}`);
 } catch (error) {
   failures++;
   console.error(`\nAborted: ${error.message}`);

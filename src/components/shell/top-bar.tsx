@@ -53,9 +53,13 @@ export function TopBar({ displayName, totalXp, currentStreak, shields }: TopBarP
           {totalXp.toLocaleString()} XP
         </span>
 
-        <span className="grid size-7 place-items-center rounded-full bg-[var(--surface-3)] text-[11px] font-medium">
+        <Link
+          href="/profile"
+          aria-label="Profile and achievements"
+          className="grid size-7 place-items-center rounded-full bg-[var(--surface-3)] text-[11px] font-medium hover:bg-[var(--border-strong)]"
+        >
           {(displayName ?? "?").slice(0, 1).toUpperCase()}
-        </span>
+        </Link>
       </div>
     </header>
   );

@@ -372,6 +372,62 @@ export interface Database {
         weakness_id: string | null;
         created_at: string;
       }>;
+      achievements: Table<{
+        id: string;
+        slug: string;
+        name: string;
+        description: string;
+        category: string;
+        criteria: Json;
+        xp: number;
+        tier: number;
+        icon: string | null;
+        sort_order: number;
+      }>;
+      user_achievements: Table<{
+        user_id: string;
+        achievement_id: string;
+        progress: Json;
+        unlocked_at: string | null;
+      }>;
+      coding_attempts: Table<{
+        id: string;
+        user_id: string;
+        problem_id: string;
+        language: string;
+        code: string | null;
+        status: "in_progress" | "passed" | "failed" | "abandoned";
+        tests_passed: number;
+        tests_total: number;
+        seconds: number | null;
+        hints_used: number;
+        complexity_claim: string | null;
+        ai_review: Json;
+        created_at: string;
+      }>;
+      system_design_attempts: Table<{
+        id: string;
+        user_id: string;
+        case_id: string;
+        submission_md: string | null;
+        diagram_mermaid: string | null;
+        scores: Json;
+        overall_score: number | null;
+        ai_feedback: Json;
+        submitted_at: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      boss_battle_attempts: Table<{
+        id: string;
+        user_id: string;
+        battle_id: string;
+        analysis_md: string | null;
+        scores: Json;
+        overall_score: number | null;
+        completed_at: string | null;
+        created_at: string;
+      }>;
       research_notes: Table<{
         id: string;
         user_id: string;
