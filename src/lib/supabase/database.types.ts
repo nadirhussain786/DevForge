@@ -319,6 +319,30 @@ export interface Database {
         retired_at: string | null;
         created_at: string;
       }>;
+      jd_requirements: Table<{
+        id: string;
+        jd_id: string;
+        user_id: string;
+        skill_id: string | null;
+        raw_label: string;
+        normalized_label: string;
+        kind: "required" | "preferred";
+        gap: "strong" | "partial" | "gap" | "critical" | null;
+        user_mastery_at_parse: number | null;
+        created_at: string;
+      }>;
+      job_descriptions: Table<{
+        id: string;
+        user_id: string;
+        company_id: string | null;
+        title: string;
+        source_url: string | null;
+        raw_text: string;
+        parsed: Json;
+        parsed_at: string | null;
+        prompt_version: string | null;
+        created_at: string;
+      }>;
       research_tasks: Table<{
         id: string;
         user_id: string;

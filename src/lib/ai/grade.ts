@@ -2,7 +2,7 @@ import "server-only";
 
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 
-import { AI_MODEL, EFFORT, MAX_TOKENS, PROMPT_VERSIONS, getClient } from "./provider";
+import { AI_MODEL, EFFORT, MAX_TOKENS, PROMPT_VERSIONS, getClient, isAiConfigured } from "./provider";
 import { consumeRateLimit, fence } from "./guard";
 import { recordUsage } from "./meter";
 import { gradeSchema, type Grade } from "./schemas";
@@ -89,6 +89,12 @@ export async function gradeAnswer(req: GradeRequest): Promise<GradeResult> {
   const trimmed = req.answer.trim();
   if (trimmed.length === 0) {
     return { ...emptyAnswerGrade(), promptVersion, degraded: false };
+  }
+
+  // No key configured is a supported deployment, not an error — skip straight
+  // to the heuristic without logging noise on every submission.
+  if (!isAiConfigured()) {
+    return { ...heuristicGrade(req), promptVersion, degraded: true };
   }
 
   const allowed = await consumeRateLimit(req.userId, "grade");

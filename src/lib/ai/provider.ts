@@ -9,8 +9,21 @@ import Anthropic from "@anthropic-ai/sdk";
 
 let client: Anthropic | null = null;
 
+/**
+ * AI is an OPTIONAL dependency. EngForge runs without an API key: answers are
+ * still saved, still scored (by a capped heuristic), and still produce
+ * evidence, XP, and weaknesses. What you lose is grading precision and the
+ * Socratic follow-ups — not the product.
+ *
+ * Every caller must therefore treat AI as a best-effort enhancement, never a
+ * hard requirement. Check this before promising the user an AI-graded result.
+ */
+export function isAiConfigured(): boolean {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
 export function getClient(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isAiConfigured()) {
     throw new AiUnavailableError("ANTHROPIC_API_KEY is not set");
   }
   client ??= new Anthropic();

@@ -38,7 +38,9 @@ returns table (level smallint, level_name text)
 language sql
 immutable
 as $$
-  select * from (values
+  -- Select only the two declared output columns; `threshold` exists to order
+  -- and filter the rows, not to be returned.
+  select t.level, t.level_name from (values
     (7::smallint, 'Principal Engineer',  20000),
     (6::smallint, 'Staff Engineer',      12000),
     (5::smallint, 'Senior Engineer',      7000),

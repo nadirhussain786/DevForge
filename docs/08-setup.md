@@ -37,48 +37,77 @@ From **Project Settings → API**, fill in:
 > `server-only`, so an accidental client import fails the build rather than
 > leaking it at runtime.
 
-## 4. Link the CLI and push migrations
+## 4. Apply the migrations
 
-Your project ref is the ID in the dashboard URL:
-`https://supabase.com/dashboard/project/<ref>`
+Add the direct Postgres connection string to `.env` — dashboard → **Project
+Settings → Database → Connection string → URI**. The "Session pooler" string is
+the right one from most networks, because the direct `db.<ref>.supabase.co`
+host is IPv6-only on newer projects:
 
-```bash
-pnpm supabase login
-pnpm supabase link --project-ref <ref>
-pnpm db:push
+```
+SUPABASE_DB_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 ```
 
-`db:push` applies `supabase/migrations/0001` → `0014` in order. It will ask for
-the database password from step 2.
+This is a **different credential** from the service-role key — that one speaks
+PostgREST and cannot run DDL.
+
+```bash
+pnpm db:migrate
+```
+
+Applies `supabase/migrations/0001` → `0014` in order, each in its own
+transaction, recording what ran in `public.schema_migrations`. Re-running skips
+anything already applied, and a failure leaves no partial migration behind.
+
+`pnpm db:migrate --dry-run` lists what would run. If you'd rather use the
+Supabase CLI, `pnpm supabase link --project-ref <ref> && pnpm db:push` does the
+same job.
 
 ## 5. Seed
 
-The seed files are ordinary SQL. Either paste them into the dashboard **SQL
-Editor** in order, or pipe them with psql:
-
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/seed/0001_taxonomy.sql
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/seed/0002_achievements.sql
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/seed/0003_sample_content.sql
+pnpm db:seed
 ```
 
-All three are idempotent — re-running them updates rather than duplicating.
+Runs the migrations (skipping applied ones) and then `supabase/seed/*.sql`. All
+seeds are idempotent — re-running updates rather than duplicating, so this is
+also how you reload content after editing a seed file.
 
-After seeding you have 12 domains, ~100 skills with prerequisites, 7 role
+You should end up with 12 domains, ~100 skills with prerequisites, 7 role
 tracks with a full weight matrix, 17 achievements, and two fully authored
-sample topics.
+sample topics. Check with:
+
+```bash
+pnpm db:probe
+```
 
 ## 6. Verify the privacy invariant
 
 Before trusting anything else, prove that admins cannot read private content:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rls_privacy.sql
+pnpm db:verify
 ```
 
-Expect a series of `ok:` notices and no exception. The script rolls back, so it
-leaves no fixtures behind. **A failure here is a release blocker** — it means
-`owner_only` RLS has regressed.
+This creates three throwaway auth users, exercises the policies as each of them
+with **real JWTs** (not the service role, which bypasses RLS by design), and
+deletes them afterwards. It checks:
+
+- the signup trigger provisions `profiles`, `user_settings`, `career_profiles`
+- an owner can read their own `research_notes`
+- **an admin JWT reads zero of them — invariant #7**
+- another ordinary user reads zero of them
+- `record_evidence` writes the ledger and recomputes mastery atomically
+- the ledger rejects `UPDATE` at both layers: RLS matches zero rows for a user,
+  and the append-only trigger raises even for the service role
+- a duplicate XP award is rejected by the unique index
+- a user cannot promote themselves to admin
+
+Expect `All RLS checks passed.` **A failure here is a release blocker.**
+
+There is also `supabase/tests/rls_privacy.sql` for running the same assertions
+inside a single rolled-back transaction via `psql`, if you prefer that to the
+JWT-level test.
 
 ## 7. Generate types
 

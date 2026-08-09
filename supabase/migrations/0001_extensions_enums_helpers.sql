@@ -51,44 +51,11 @@ create type content_kind       as enum (
 create type plan_item_source   as enum ('roadmap', 'revision', 'weakness', 'jd');
 
 -- ── Helpers ────────────────────────────────────────────────────────────────
-
--- SECURITY DEFINER so it can read `profiles` without re-entering that table's
--- own RLS policies. A policy on `profiles` that subqueried `profiles` directly
--- would recurse infinitely.
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public, pg_temp
-as $$
-  select exists (
-    select 1
-    from public.profiles
-    where id = auth.uid()
-      and role in ('admin', 'super_admin')
-  );
-$$;
-
-create or replace function public.is_super_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public, pg_temp
-as $$
-  select exists (
-    select 1
-    from public.profiles
-    where id = auth.uid()
-      and role = 'super_admin'
-  );
-$$;
-
-revoke execute on function public.is_admin() from public;
-revoke execute on function public.is_super_admin() from public;
-grant execute on function public.is_admin() to authenticated;
-grant execute on function public.is_super_admin() to authenticated;
+--
+-- `is_admin()` and `is_super_admin()` live in 0002, not here: they read
+-- `public.profiles`, and Postgres validates a SQL function's body against the
+-- catalog at CREATE time. Defining them before the table they query fails with
+-- `relation "public.profiles" does not exist`.
 
 create or replace function public.set_updated_at()
 returns trigger

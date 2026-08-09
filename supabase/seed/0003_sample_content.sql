@@ -20,7 +20,7 @@ from public.skills s where s.slug = 'postgres-indexing'
 on conflict (slug) do nothing;
 
 insert into public.topic_contents (topic_id, kind, body_md, sort_order)
-select t.id, v.kind, v.body, 0
+select t.id, v.kind::content_kind, v.body, 0
 from (values
   ('beginner', E'An index is a lookup structure that lets the database find rows without reading the whole table.\n\nWithout one, finding `WHERE email = ''a@b.com''` means checking every row — a **sequential scan**. With one, the database jumps almost straight to the answer.\n\nThe cost: every index has to be updated on every write, and it takes disk space.'),
   ('engineer', E'PostgreSQL''s default index is a **B-Tree**: a balanced tree where each node holds sorted keys and pointers. Lookups, range scans, and ordered reads are all `O(log n)`.\n\nThat structure explains what a B-Tree can and cannot do:\n\n- `WHERE created_at > now() - interval ''7 days''` — works, ranges are contiguous in a sorted tree\n- `ORDER BY created_at DESC LIMIT 10` — works, the tree is already ordered\n- `WHERE lower(email) = $1` — does **not** work against an index on `email`; the expression is not what was indexed. You need an expression index on `lower(email)`\n\n**Composite indexes are ordered.** An index on `(tenant_id, created_at)` serves `WHERE tenant_id = $1 ORDER BY created_at`, but does little for `WHERE created_at > $1` alone — that''s the leading-column rule.'),
@@ -46,7 +46,7 @@ from public.skills s where s.slug = 'idempotency'
 on conflict (slug) do nothing;
 
 insert into public.topic_contents (topic_id, kind, body_md, sort_order)
-select t.id, v.kind, v.body, 0
+select t.id, v.kind::content_kind, v.body, 0
 from (values
   ('beginner', E'An operation is **idempotent** if doing it twice has the same effect as doing it once.\n\nDeleting a file is idempotent — delete it again and it''s still gone. Charging a card is not: do it twice and the customer pays twice.'),
   ('engineer', E'Networks cannot deliver a message exactly once. A sender that gets no acknowledgement cannot tell whether the request was lost on the way *out* or the response was lost on the way *back* — so it retries, and the receiver may see the same request twice.\n\nThis is why almost every payment provider delivers webhooks **at least once**, and why "exactly-once delivery" is a marketing phrase rather than an engineering one.\n\nThe practical fix is exactly-once *processing*, built from at-least-once delivery plus deduplication:\n\n```sql\ncreate table processed_events (\n  event_id text primary key,\n  processed_at timestamptz not null default now()\n);\n```\n\n```ts\nawait db.transaction(async (tx) => {\n  // The primary key does the work. A duplicate raises a conflict and the\n  // side effect below never runs.\n  await tx.insert(processedEvents).values({ eventId: event.id })\n  await applySideEffect(tx, event)\n})\n```\n\nThe dedup record and the side effect must share **one transaction**. Split them and a crash in between produces either a double charge or a silently dropped event.'),

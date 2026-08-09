@@ -18,6 +18,50 @@ create table public.profiles (
   constraint handle_format check (handle is null or handle ~ '^[a-z0-9][a-z0-9_-]{2,29}$')
 );
 
+-- ── RBAC helpers ───────────────────────────────────────────────────────────
+--
+-- Defined here rather than in 0001 because they read `profiles` and Postgres
+-- validates a SQL function body against the catalog at CREATE time.
+--
+-- SECURITY DEFINER so they can read `profiles` without re-entering that
+-- table's own RLS policies — a policy on `profiles` that subqueried `profiles`
+-- directly would recurse infinitely.
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and role in ('admin', 'super_admin')
+  );
+$$;
+
+create or replace function public.is_super_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and role = 'super_admin'
+  );
+$$;
+
+revoke execute on function public.is_admin() from public;
+revoke execute on function public.is_super_admin() from public;
+grant execute on function public.is_admin() to authenticated;
+grant execute on function public.is_super_admin() to authenticated;
+
 -- ── user_settings ─────────────────────────────────────────── owner_only ───
 create table public.user_settings (
   user_id            uuid primary key references auth.users(id) on delete cascade,
