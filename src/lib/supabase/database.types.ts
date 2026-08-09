@@ -43,6 +43,8 @@ export interface Database {
         locale: string;
         plan: string;
         last_active_at: string | null;
+        /** Set by soft_delete_account() — see migration 0015. */
+        deleted_at: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -317,6 +319,57 @@ export interface Database {
         last_result: boolean | null;
         last_reviewed_at: string | null;
         retired_at: string | null;
+        created_at: string;
+      }>;
+      applications: Table<{
+        id: string;
+        user_id: string;
+        company_id: string | null;
+        jd_id: string | null;
+        role_title: string;
+        status:
+          | "saved" | "preparing" | "applied" | "recruiter_screen" | "technical_screen"
+          | "technical_interview" | "system_design" | "behavioral" | "final"
+          | "offer" | "rejected" | "withdrawn";
+        applied_at: string | null;
+        next_event_at: string | null;
+        notes_md: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      application_events: Table<{
+        id: string;
+        application_id: string;
+        user_id: string;
+        status: string;
+        occurred_at: string;
+        note: string | null;
+      }>;
+      interview_records: Table<{
+        id: string;
+        user_id: string;
+        company_id: string | null;
+        role_title: string;
+        stage:
+          | "recruiter" | "technical_screen" | "technical" | "system_design"
+          | "behavioral" | "final" | "take_home";
+        occurred_at: string;
+        outcome: "passed" | "failed" | "pending" | "withdrawn" | null;
+        confidence: number | null;
+        notes_md: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      interview_record_questions: Table<{
+        id: string;
+        record_id: string;
+        user_id: string;
+        question_text: string;
+        quality: "strong" | "shaky" | "failed" | "unanswered";
+        skill_id: string | null;
+        difficulty: number;
+        unexpected: boolean;
+        weakness_id: string | null;
         created_at: string;
       }>;
       research_notes: Table<{
