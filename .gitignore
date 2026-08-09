@@ -44,3 +44,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Generated content drafts — reviewable prose, safe to delete and regenerate
+supabase/generated/

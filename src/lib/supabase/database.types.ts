@@ -372,6 +372,28 @@ export interface Database {
         weakness_id: string | null;
         created_at: string;
       }>;
+      glossary_terms: Table<{
+        id: string;
+        term: string;
+        aliases: string[];
+        short_def: string;
+        long_def: string | null;
+        skill_id: string | null;
+        domain_id: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      topic_media: Table<{
+        id: string;
+        topic_id: string;
+        kind: "mermaid" | "image" | "table";
+        source: string;
+        caption: string | null;
+        explanation_md: string;
+        alt_text: string | null;
+        sort_order: number;
+        created_at: string;
+      }>;
       achievements: Table<{
         id: string;
         slug: string;

@@ -19,7 +19,9 @@
     "verify:loop": "node scripts/verify-loop.mjs",
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
-    "ai:check": "node scripts/ai-check.mjs"
+    "ai:check": "node scripts/ai-check.mjs",
+    "content:generate": "node scripts/generate-content.mjs",
+    "content:publish": "node scripts/generate-content.mjs --publish"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
@@ -30,6 +32,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.30.0",
+    "mermaid": "^11.16.1",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

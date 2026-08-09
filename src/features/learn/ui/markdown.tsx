@@ -1,74 +1,148 @@
+"use client";
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { cn } from "@/lib/utils";
 
+import { annotateChildren, useGlossary } from "./glossary";
+import { MermaidDiagram } from "./mermaid-diagram";
+
 /**
- * Content renderer for authored topic bodies.
+ * Content renderer for authored learning material.
  *
- * Reading views cap at ~72ch and run looser than the console density — see
- * docs/06-design-system.md §3. Trade-off tables get horizontal scroll rather
- * than squeezing the page.
+ * Three things beyond plain markdown:
+ *
+ *   `.reading` — serif body at a generous measure and leading, because this is
+ *   where a learner spends hours and comfort compounds.
+ *
+ *   ```mermaid fences render as diagrams, so a mechanism can be shown as well
+ *   as described.
+ *
+ *   Glossary terms are marked inline on first occurrence, so unfamiliar
+ *   vocabulary never stops a sentence dead.
+ *
+ * Set `plain` for UI copy that should not be annotated or set in serif —
+ * question prompts, for instance, where a tooltip would be a distraction
+ * mid-assessment.
  */
-export function Markdown({ content, className }: { content: string; className?: string }) {
+export function Markdown({
+  content,
+  className,
+  plain = false,
+}: {
+  content: string;
+  className?: string;
+  plain?: boolean;
+}) {
+  const glossary = useGlossary();
+  const annotate = (children: React.ReactNode) =>
+    plain ? children : annotateChildren(children, glossary);
+
   return (
-    <div className={cn("flex flex-col gap-4 text-[15px] leading-relaxed", className)}>
+    <div className={cn(plain ? "text-[15px] leading-relaxed" : "reading", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          h1: (props) => <h2 className="mt-2 text-lg font-semibold tracking-tight" {...props} />,
-          h2: (props) => <h3 className="mt-2 text-base font-semibold tracking-tight" {...props} />,
-          h3: (props) => <h4 className="mt-2 text-sm font-semibold" {...props} />,
-          p: (props) => <p className="max-w-[72ch]" {...props} />,
-          ul: (props) => <ul className="ml-5 flex list-disc flex-col gap-1.5" {...props} />,
-          ol: (props) => <ol className="ml-5 flex list-decimal flex-col gap-1.5" {...props} />,
-          strong: (props) => <strong className="font-semibold text-[var(--text)]" {...props} />,
-          a: (props) => (
-            <a className="text-[var(--forge-500)] underline underline-offset-2" {...props} />
+          h1: ({ children }) => <h2>{children}</h2>,
+          h2: ({ children }) => <h2>{children}</h2>,
+          h3: ({ children }) => <h3>{children}</h3>,
+          h4: ({ children }) => <h4>{children}</h4>,
+
+          p: ({ children }) => <p>{annotate(children)}</p>,
+          li: ({ children }) => <li>{annotate(children)}</li>,
+
+          ul: ({ children }) => (
+            <ul className="ml-5 list-disc space-y-1.5 marker:text-[var(--text-subtle)]">
+              {children}
+            </ul>
           ),
-          code: ({ className: cls, children: code, ...rest }) => {
+          ol: ({ children }) => (
+            <ol className="ml-5 list-decimal space-y-1.5 marker:text-[var(--text-subtle)]">
+              {children}
+            </ol>
+          ),
+
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              className="text-[var(--forge-600)] underline decoration-[var(--forge-500)]/40 underline-offset-2 hover:decoration-[var(--forge-500)]"
+            >
+              {children}
+            </a>
+          ),
+
+          code: ({ className: cls, children }) => {
             const isBlock = /language-/.test(cls ?? "");
             if (isBlock) {
-              return (
-                <code className="metric block text-[13px] leading-relaxed" {...rest}>
-                  {code}
-                </code>
-              );
+              return <code className={cn("metric text-[13px] leading-relaxed", cls)}>{children}</code>;
             }
             return (
-              <code
-                className="metric rounded bg-[var(--surface-2)] px-1 py-0.5 text-[13px]"
-                {...rest}
-              >
-                {code}
+              <code className="metric rounded-[var(--radius-sm)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.875em] text-[var(--text)]">
+                {children}
               </code>
             );
           },
-          pre: (props) => (
-            <pre
-              className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] p-3"
-              {...props}
-            />
-          ),
-          table: (props) => (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]" {...props} />
+
+          pre: ({ children }) => {
+            // A ```mermaid fence becomes a rendered diagram rather than a code
+            // block. Reaching into the child to find the source is unpleasant,
+            // but it is the only place remark exposes the language.
+            const child = (children as { props?: { className?: string; children?: unknown } })?.props;
+            const language = child?.className ?? "";
+
+            if (/language-mermaid/.test(language)) {
+              const source = String(child?.children ?? "").trim();
+              return <MermaidDiagram source={source} />;
+            }
+
+            return (
+              <pre className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                {children}
+              </pre>
+            );
+          },
+
+          table: ({ children }) => (
+            <div className="my-5 overflow-x-auto rounded-[var(--radius)] border border-[var(--border)]">
+              <table className="w-full border-collapse font-sans text-[13px]">{children}</table>
             </div>
           ),
-          th: (props) => (
-            <th
-              className="border-b border-[var(--border-strong)] px-3 py-2 text-left font-medium"
-              {...props}
-            />
+          thead: ({ children }) => <thead className="bg-[var(--surface-2)]">{children}</thead>,
+          th: ({ children }) => (
+            <th className="border-b border-[var(--border-strong)] px-3 py-2 text-left font-semibold">
+              {children}
+            </th>
           ),
-          td: (props) => (
-            <td className="border-b border-[var(--border)] px-3 py-2 align-top" {...props} />
+          td: ({ children }) => (
+            <td className="border-b border-[var(--border)] px-3 py-2 align-top">
+              {annotate(children)}
+            </td>
           ),
-          blockquote: (props) => (
-            <blockquote
-              className="border-l-2 border-[var(--forge-500)] pl-4 text-[var(--text-muted)]"
-              {...props}
-            />
+
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-2 border-[var(--forge-500)] pl-4 text-[var(--text-muted)] italic">
+              {children}
+            </blockquote>
+          ),
+
+          hr: () => <hr className="my-8 border-[var(--border)]" />,
+
+          img: ({ src, alt }) => (
+            <figure className="my-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={typeof src === "string" ? src : ""}
+                alt={alt ?? ""}
+                loading="lazy"
+                className="mx-auto max-w-full rounded-[var(--radius)] border border-[var(--border)]"
+              />
+              {alt && (
+                <figcaption className="mt-2 text-center text-[13px] text-[var(--text-muted)]">
+                  {alt}
+                </figcaption>
+              )}
+            </figure>
           ),
         }}
       >

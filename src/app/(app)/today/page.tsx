@@ -4,6 +4,8 @@ import { AlertTriangle, ArrowRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { StatTile } from "@/components/ui/stat-tile";
+import { getProgressStory } from "@/features/gamification/data/story";
+import { ProgressStory } from "@/features/gamification/ui/progress-story";
 import { getTodaySnapshot } from "@/features/roadmap/data/today";
 import { MissionCard } from "@/features/roadmap/ui/mission-card";
 import { requireOnboarded } from "@/lib/auth/session";
@@ -13,6 +15,15 @@ export const metadata: Metadata = { title: "Today · EngForge" };
 export default async function TodayPage() {
   const ctx = await requireOnboarded();
   const snapshot = await getTodaySnapshot(ctx.userId, ctx.profile?.timezone ?? "UTC");
+
+  // The snapshot already paid for momentum and streak; don't re-fetch them.
+  const story = await getProgressStory(ctx.userId, {
+    limit: 3,
+    overrides: {
+      momentum: snapshot.momentum?.score ?? 0,
+      currentStreak: snapshot.streak.current,
+    },
+  });
 
   const xpAvailable = snapshot.items
     .filter((i) => i.status !== "completed")
@@ -60,6 +71,8 @@ export default async function TodayPage() {
               hint={snapshot.momentum?.band}
             />
           </div>
+
+          <ProgressStory beats={story} />
 
           <MissionCard items={snapshot.items} />
 
